@@ -454,6 +454,13 @@ function bind() {
   });
 
   $('code-box').value = BOOKMARKLET;
+  // Dragged onto Chrome's bookmarks bar on the Mac, this link becomes the bookmark.
+  const drag = $('grab-drag');
+  drag.href = BOOKMARKLET;
+  drag.addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('Drag this button onto the bookmarks bar instead of clicking it.');
+  });
   $('copy-code').addEventListener('click', async () => {
     const ok = await copyText(BOOKMARKLET);
     $('copy-status').textContent = ok
@@ -463,6 +470,7 @@ function bind() {
 }
 
 // ---------- Start ----------
+if (location.hash === '#grabber') $('grabber').open = true;
 state = restore(loadDraft());
 bind();
 renderSettings();
