@@ -1,0 +1,17 @@
+{
+  "name": "caryam0-pricecheck",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Caryam0 price check: eBay sold-price lookup and buy calculator for thrift shopping.",
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\"",
+    "build:bookmarklet": "node bookmarklet/build.mjs",
+    "icons": "node scripts/make-icons.mjs",
+    "start": "node scripts/serve.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.0",
+    "terser": "^5.51.2"
+  }
+}

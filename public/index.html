@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Caryam0 Price Check</title>
+  <meta name="description" content="Check eBay sold prices and decide what to pay.">
+  <meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Price Check">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1><span class="brand-mark" aria-hidden="true">$</span> Caryam0 Price Check</h1>
+    <button type="button" id="new-check" class="btn btn-quiet btn-small">New check</button>
+  </header>
+
+  <main>
+    <!-- STEP 1 -->
+    <section class="card" aria-labelledby="step1-title">
+      <h2 id="step1-title"><span class="step">1</span> What is it?</h2>
+      <label for="query">Model number or item name</label>
+      <input id="query" type="search" autocomplete="off" autocorrect="off" autocapitalize="off"
+             spellcheck="false" enterkeyhint="go" placeholder="e.g. Pioneer SX-780">
+
+      <p class="label" id="cond-label">Condition</p>
+      <div class="seg seg-4" role="group" aria-labelledby="cond-label" id="condition">
+        <button type="button" data-value="any">Any</button>
+        <button type="button" data-value="used">Used</button>
+        <button type="button" data-value="new">New</button>
+        <button type="button" data-value="parts">For parts</button>
+      </div>
+
+      <a id="ebay-link" class="btn btn-primary btn-big" target="_blank" rel="noopener">
+        See sold prices on eBay <span aria-hidden="true">↗</span>
+      </a>
+      <p id="ebay-hint" class="hint">Type a model number or name first.</p>
+      <p id="ebay-fallback" class="hint" hidden>
+        Chrome didn’t open? <a id="ebay-link-here" target="_blank" rel="noopener">Open eBay here instead</a>.
+      </p>
+      <button type="button" id="fetch-prices" class="btn btn-secondary btn-big" hidden>Get sold prices</button>
+      <p id="fetch-status" class="hint" role="status" hidden></p>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="card" aria-labelledby="step2-title">
+      <h2 id="step2-title"><span class="step">2</span> Sold prices</h2>
+      <label for="price-input">Type or paste sold prices</label>
+      <div class="input-row">
+        <input id="price-input" type="text" inputmode="decimal" autocomplete="off" placeholder="285  310  $1,250">
+        <button type="button" id="add-prices" class="btn btn-primary">Add</button>
+      </div>
+      <p class="hint">On eBay, use your <strong>Grab prices</strong> bookmark, tap <strong>Copy prices</strong>, then paste here.</p>
+
+      <div id="chips" class="chips" aria-label="Sold prices"></div>
+
+      <div id="stats" class="stats" hidden>
+        <div class="stat stat-main">
+          <span class="stat-label">Typical</span>
+          <span class="stat-value" id="stat-median"></span>
+        </div>
+        <div class="stat"><span class="stat-label">Average</span><span class="stat-value" id="stat-average"></span></div>
+        <div class="stat"><span class="stat-label">Range</span><span class="stat-value" id="stat-range"></span></div>
+        <div class="stat"><span class="stat-label">Sold</span><span class="stat-value" id="stat-count"></span></div>
+      </div>
+      <button type="button" id="clear-prices" class="btn btn-quiet" hidden>Clear all prices</button>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="card" aria-labelledby="step3-title">
+      <h2 id="step3-title"><span class="step">3</span> Price and shipping</h2>
+      <label for="ask">Asking price <span class="optional">(optional)</span></label>
+      <div class="money"><input id="ask" type="text" inputmode="decimal" autocomplete="off" placeholder="Sticker price"></div>
+
+      <p class="label" id="ship-label">When you sell it</p>
+      <div class="seg seg-2" role="group" aria-labelledby="ship-label" id="ship-mode">
+        <button type="button" data-value="buyer">Buyer pays shipping</button>
+        <button type="button" data-value="free">Free shipping</button>
+      </div>
+
+      <label for="ship">Shipping cost</label>
+      <div class="money"><input id="ship" type="text" inputmode="decimal" autocomplete="off"></div>
+    </section>
+
+    <!-- RESULT -->
+    <section class="card result" aria-labelledby="result-title" aria-live="polite">
+      <h2 id="result-title" class="sr-only">What to pay</h2>
+      <div class="tag-wrap">
+        <div class="tag" id="tag">
+          <span class="tag-hole" aria-hidden="true"></span>
+          <span class="tag-label" id="tag-label">Pay up to</span>
+          <span class="tag-price" id="tag-price">—</span>
+          <span class="tag-note" id="tag-note">Add sold prices to see what to pay.</span>
+        </div>
+      </div>
+      <div id="verdict" class="verdict" hidden></div>
+      <table id="breakdown" class="breakdown" hidden>
+        <caption class="sr-only">How the price was figured</caption>
+        <tbody></tbody>
+      </table>
+      <button type="button" id="save-check" class="btn btn-secondary btn-big" disabled>Save to recent checks</button>
+    </section>
+
+    <!-- RECENT -->
+    <section class="card" aria-labelledby="recent-title">
+      <h2 id="recent-title">Recent checks</h2>
+      <p id="recent-empty" class="hint">Checks you save will show up here. Tap one to bring it back.</p>
+      <ul id="recent-list" class="recent"></ul>
+    </section>
+
+    <!-- SETTINGS -->
+    <details class="card fold" id="settings">
+      <summary>Pricing settings</summary>
+      <label for="fee-rate">eBay fee</label>
+      <select id="fee-rate"></select>
+
+      <label for="default-ship">Usual shipping cost</label>
+      <div class="money"><input id="default-ship" type="text" inputmode="decimal" autocomplete="off"></div>
+      <p class="hint">Filled in for each new check. You can still change it per item.</p>
+
+      <label for="target">Profit goal (% of the sold price)</label>
+      <div class="percent"><input id="target" type="text" inputmode="decimal" autocomplete="off"></div>
+      <p class="hint">“Pay up to” leaves this much profit after fees and shipping.</p>
+      <p id="settings-saved" class="hint saved" role="status"></p>
+    </details>
+
+    <!-- BOOKMARKLET SETUP -->
+    <details class="card fold" id="grabber">
+      <summary>Price grabber setup</summary>
+      <p>The <strong>Grab prices</strong> bookmark reads the sold prices off an eBay page for you, so you
+        don’t have to type them. You only set it up once.</p>
+      <button type="button" id="copy-code" class="btn btn-primary btn-big">Copy code</button>
+      <p id="copy-status" class="hint" role="status"></p>
+      <textarea id="code-box" class="code-box" readonly rows="3" aria-label="Bookmark code"></textarea>
+
+      <h3>Set up in Chrome (one time)</h3>
+      <ol class="steps">
+        <li>Tap <strong>Copy code</strong> above.</li>
+        <li>Open any website in Chrome (Google is fine). Tap the <strong>•••</strong> button, then <strong>Add to Bookmarks</strong>.</li>
+        <li>Tap <strong>•••</strong> again, then <strong>Bookmarks</strong>. Press and hold the bookmark you just made and tap <strong>Edit Bookmark</strong>.</li>
+        <li>Change the name to <strong>Grab prices</strong>.</li>
+        <li>Tap the URL box, delete everything in it, and paste. Tap <strong>Done</strong>.</li>
+      </ol>
+
+      <h3>Use it (every time)</h3>
+      <ol class="steps">
+        <li>Tap <strong>See sold prices on eBay</strong> in step 1.</li>
+        <li>On the eBay page, tap the address bar at the top and type <strong>grab</strong>.</li>
+        <li>Tap <strong>Grab prices</strong> in the list that pops up. <em>Don’t</em> use the Bookmarks menu for this part; Chrome won’t run it from there.</li>
+        <li>A yellow card appears. Tap <strong>Copy prices</strong>, come back here, and paste into step 2.</li>
+      </ol>
+
+      <h3>Backup: Safari</h3>
+      <ol class="steps">
+        <li>Tap <strong>Copy code</strong> above.</li>
+        <li>In Safari, open any website, tap the <strong>Share</strong> button, then <strong>Add Bookmark</strong>. Tap <strong>Save</strong>.</li>
+        <li>Tap the <strong>Bookmarks</strong> button (open book), then <strong>Edit</strong>. Tap the new bookmark.</li>
+        <li>Change the name to <strong>Grab prices</strong>. Clear the address and paste. Tap <strong>Done</strong>.</li>
+        <li>To use it: on the eBay page, open <strong>Bookmarks</strong> and tap <strong>Grab prices</strong> (or type <strong>grab</strong> in the address bar and tap it).</li>
+      </ol>
+    </details>
+
+    <p class="footer-note">Prices come from eBay’s own sold listings. The “Pay up to” amount is a guide, not a promise.</p>
+  </main>
+</body>
+</html>
