@@ -76,6 +76,22 @@ Today that returns `manual.js` (Dad pastes prices). To switch to a paid API:
   "Buy it" if ask ≤ pay-up-to, "Thin margin" if still profitable, otherwise "Pass".
 - The tag rounds **down** to the whole dollar; the breakdown shows cents.
 
+## Live site (GitHub Pages)
+
+The app is live at **https://ghostnappa0614.github.io/caryam0-pricecheck/**.
+GitHub serves whatever is on the `gh-pages` branch, which is a copy of `public/`.
+
+To publish changes: commit them to `main`, push, then run
+
+```bash
+npm run deploy:github
+```
+
+GitHub Pages is public: anyone with the address can open the app. No private
+data is in it; settings and recent checks stay on each phone. The
+`functions/` placeholder doesn't run on GitHub Pages; the paid price source
+would need Cloudflare (below).
+
 ## Putting it online (Cloudflare Pages), for later
 
 You don't need GitHub. These steps upload the folder straight from this Mac.
